@@ -27,6 +27,6 @@ CREATE TABLE IF NOT EXISTS `collab_tool_messages` (
   PRIMARY KEY(id)
 );
 
-INSERT INTO `collab_tool_users` (`id`, `nickName`, `status`)  VALUES (NULL,  'Nadir.Hamid', 1);
+INSERT INTO `collab_tool_users` (`id`, `nickName`, `status`, `joined`)  VALUES (NULL,  'Nadir.Hamid', 1, '1442694396.000');
  
 

@@ -32,12 +32,15 @@ window.collab_tool.colors = [
 
 window.collab_tool.welcomeScreen =true;
 window.collab_tool.lastUpdate = null;
+collab_tool.getSystemClock = function() {
+    return  collab_tool.systemTime;
+}
 //window.collab_tool.init = false;
 collab_tool.setup = function() {
   Oneline.setup({
      module: 'collab_tool',
      host: document.location.host,
-     freq: 0
+     freq:100 
    });
 
     Oneline.ready(function() {
@@ -61,14 +64,14 @@ collab_tool.setup = function() {
             if (res.response.type === 'newMember') {
                 if (!res.response.error) {
               //collab_tool.updateConfig(res.response.user);
-                    if (collab_tool.settings.nickName !== res.response.user.nickName) {
-                      alertNewMember( res.response.user.nickName);
-                      collab_tool.runCore();
-                    }  else {
                       collab_tool.updateConfig(res.response.user);
+                      // 10seconds behind
+                      collab_tool.systemTime = parseFloat(res.response.time);
                       collab_tool.initUI();
                       collab_tool.runCore();
-                    }
+                      setInterval(function() {
+                        collab_tool.systemTime += 1.00;
+                      }, 1000);
                 } else { // an error
                   collab_tool.warn("Could not join the collab tool the usernme was already taken");
                   document.location.replace(document.location.href); 
@@ -105,6 +108,7 @@ collab_tool.setup = function() {
                 setTimeout(function() {
               collab_tool.updateMembers(users);
                 }, 0);
+              collab_tool.lastUpdate =  collab_tool.getSystemClock();
               collab_tool.runCore();
           }
       }
@@ -132,12 +136,12 @@ collab_tool.updateDrawings = function(drawings) {
 
 collab_tool.updateMembers = function(members) {
     for ( var i in members) {
-          var current = document.getElementById("message-" + members[i].id);
+          var current = document.getElementById("members-" + members[i].id);
           if (current === null) {
               var newMember = $("<li></li>");
               var memberName = $("<span>" + members[i].nickName  + "</span>");
               $(newMember).append(memberName);
-              $(newMember).attr("id", "member-" +members[i].id);
+              $(newMember).attr("id", "members-" +members[i].id);
               $(newMember).append(memberName); 
               $("#members").append(newMember) ;
           }
@@ -286,7 +290,7 @@ collab_tool.updateConfig = function(user)  {
 collab_tool.runCore = function() {
     if (collab_tool.lastUpdate) {
         Oneline.once({ 
-          "obj": "sync",
+          "obj": "generic",
           "data": {
             "type": "sync",
               "data": {
@@ -301,7 +305,6 @@ collab_tool.runCore = function() {
        "data": {  }
       }});
     }
-       collab_tool.lastUpdate = Date.now() / 1000; 
 };
 collab_tool.addMessage= function(data) { // message from external user
          
@@ -353,6 +356,7 @@ collab_tool.drawDrag = function(evt) {
         "data": {
       "type": "draw",
       "data": {
+        "time": collab_tool.getSystemClock(),
         "left": left,
         "top": top,
         "chalkColor": collab_tool.settings.chalkColor,
@@ -451,6 +455,7 @@ collab_tool.say = function(message) {
         "once": true, 
         "type": "chat",
         "data": {
+          "time": collab_tool.getSystemClock(),
           "message": message,
           "user_id":  collab_tool.getUserId()
           }
