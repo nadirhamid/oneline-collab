@@ -1,3 +1,8 @@
+
+ul,li {
+ list-style: none;
+}
+
 body {
   margin: 0pc;
 padding: 0px;
@@ -8,6 +13,16 @@ div {
   margin: 0px;
   padding: 0px;
 }
+hr {
+ width: inherit;
+  margin:5px 0px;
+}
+input {
+  padding: 5px;
+  font-size: 14px;
+  font-weight:700;
+}
+
 
 #dock {
   position :relative;
@@ -31,18 +46,45 @@ div {
   font-size: 24px;
   color: #010101;
 }
+.settings-box input {
+  width: 300px;
+  border-radius: 7px;
+}
+  
 
 .chalkColors {
   list-style: none;
 }
 .chalkColor {
+  cursor:pointer;
   width: 126px;
   height: 126px;
   border: 2px solid #E3E3E3;
+  border-radius:5px;
   margin-right: 5px;
   float: left;
   border: 2px solid transparent;
 }
+.chalkColor:hover {
+  border: 3px solid #CCC;
+}
+.chalkColor.hoverable.blue:hover {
+  background: lightBlue;
+}
+.chalkColor.hoverable.red:hover {
+  background: lightRed;
+}
+.chalkColor.hoverable.yellow:hover {
+  background: lightYellow;
+}
+.chalkColor.hoverable.green:hover {
+  background: lightGreen;
+}
+.chalkColor.hoverable.black:hover { 
+   background: #3D3D3D;
+}
+     
+
 .chalkColor.selected {
   border: 2px solid #E3E3E3;
 }
@@ -77,24 +119,39 @@ div {
 .chat-window {
     float: left;
     position: relative;
+    padding: 10px;
     background: #E3E3E3;
     border: 2px solid #E3E3E3;
-    padding: 10px; 
     overflow-y: auto;
 }
 
-.chat-messages li .username {
+#chatMessages li .username {
+  width: inherit;
+  font-size: 20px;
    font-weight: bold; 
   float: left;
 }
-.chat-messages li .message {
+#chatMessages li .message {
+  width: inherit;
   font-style: italic;   
   float: left;
 }
 
+#chatAlert {
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center; 
+  border-radius: 7px;
+  padding:7px;
+  background: #FFF;
+  width: 500px;
+  position:absolute;
+  top: 10px;
+}
+
+
 .chat-box {
     position:absolute; 
-    bottom: 64px;
     left: 0px;
     width: 100%;
 } 
@@ -345,7 +402,7 @@ div.hr-rule {
 
 #newUser {
     position: absolute;
-    border: 1px solid #E3E3E34;
+    border: 1px solid #E3E3E3;
     padding: 20px;
    background:#FFF; 
     top:20px;
@@ -353,11 +410,90 @@ div.hr-rule {
     width:200px;
 }
 
-#chatMembers {
+#members {
    position: relative;
    border: 1px solid #E3E3E3;
   padding:  20px;
-
+   width:inherit;
+   height: 30%;
+   overflow-y: auto;
+   
 }
+#members li {
+  font-size: 14px;
+  font-weight:700;
+  margin-left: 5px;
+}
+
+
+
+#chatBox {
+   height: 300px;
+   margin-top:10px;
+   width: inherit;
+   font-size: 12px;
+   font-weight: 700; 
+   font-family: Arial, sans-serif;
+   position: relative;
+}
+#chatBox textarea {
+   border-radius: 7px;
+   width: inherit;
+}
+
+#chatBox button {
+   z-index:1;
+   position: absolute;
+   bottom: 7px;
+   right: 4px;
+}
+
+#chatMessages { 
+  overflow-y: auto;
+  background: #FFF;
+  border-radius: 7px;
+  width: inherit;  
+  height: 60%;
+  border: 1px solid #E3E3E3;
+  padding: 10px;
+  font-size: 12px;
+}
+
+
+
+
+
+
+.ok-button {
+  padding: 20px;
+  border-radius: 7px;
+  font-size: 24px;
+  font-weight:700;
+}
+
+
+.say-button {
+  position: absolute;
+  top: 0px; 
+  right: 3px;
+  padding: 5px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #FFF;
+  background: #010101;
+  padding:15px;
+}
+.clear {
+  clear: both; 
+}
+
+
+
+
+
+    
+
+
+
 
 
