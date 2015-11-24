@@ -40,7 +40,6 @@ collab_tool.setup = function() {
      module: 'collab_tool',
     
      host: "159.100.186.106",
-     port: 9999,
      freq:100 
    });
 
@@ -363,6 +362,12 @@ collab_tool.drawFromData = function(data) { // other peoples pen should be a dif
   
   $(collab_tool.dock).append(target);
 };
+collab_tool.startDraw = function() {
+    var whiteboard = $("#whiteboard").get()[0];
+    
+    whiteboard.addEventListener("mousedown", collab_tool.drawDrag, false);
+    whiteboard.addEventListener("mouseup", collab_tool.drawEnd, false);
+};
 
 collab_tool.getWhiteboardBounds = function() {
    var offset = $("#whiteboard").offset();
@@ -389,25 +394,14 @@ collab_tool.coordsInBounds = function(coords) {
 };
 
 
-
-
-collab_tool.startDraw = function() {
-    var whiteboard = $("#whiteboard").get()[0];
-    
-    whiteboard.addEventListener("mousedown", collab_tool.drawDrag, false);
-    whiteboard.addEventListener("mouseup", collab_tool.drawEnd, false);
-};
-
 collab_tool.drawDrag = function(evt) {
    var target = document.createElement("div");   
     var offset =$("#dock").offset();
     var top = evt.clientY - offset['top'];
     var left = evt.clientX - offset['left'];
-
-    if ( collab_tool.coordsInBounds({"x": left, y: top } ) ) { 
    $(target).css({"left": evt.clientX - offset['left'], "top": evt.clientY - offset['top']});
   $(target).attr("class", "chalk " + collab_tool.settings.chalkColor ); 
- 
+ if ( collab_tool.coordsInBounds({"x": left, "y": top})) { 
     $("#whiteboard").append(target); 
   Oneline.once({ 
         "obj": "generic",
