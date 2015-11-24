@@ -1,5 +1,4 @@
-//  NOTE: // this javascript file uses websockets, and uses comet style polling
-// the  contents will add  two connections
+//  NOTE: // this javascript file uses websockets, and uses comet style polling // the  contents will add  two connections
 //  one for the syncing of data (messages, drawings, user activity)
 // the other for more simple data (new member notifications, sending a message)
 
@@ -39,7 +38,9 @@ collab_tool.getSystemClock = function() {
 collab_tool.setup = function() {
   Oneline.setup({
      module: 'collab_tool',
-     host: document.location.host,
+    
+     host: "159.100.186.106",
+     port: 9999,
      freq:100 
    });
 
@@ -63,15 +64,19 @@ collab_tool.setup = function() {
             console.log(res.response.type);
             if (res.response.type === 'newMember') {
                 if (!res.response.error) {
-              //collab_tool.updateConfig(res.response.user);
-                      collab_tool.updateConfig(res.response.user);
+                      if ( res.response.user.nickName !== collab_tool.settings.nickName) {
+                          collab_tool.alertNewMember(res.response.user);
+                        } else {
                       // 10seconds behind
+                      collab_tool.currentUser = res.response.user;
+                      collab_tool.userReady = true; 
                       collab_tool.systemTime = parseFloat(res.response.time);
                       collab_tool.initUI();
                       collab_tool.runCore();
                       setInterval(function() {
                         collab_tool.systemTime += 1.00;
                       }, 1000);
+                       }
                 } else { // an error
                   collab_tool.warn("Could not join the collab tool the usernme was already taken");
                   document.location.replace(document.location.href); 
@@ -184,22 +189,27 @@ collab_tool.getUserId = function() {
       //return collab_tool.settings.user_id;
 };
 
-collab_tool.getChalkColors = function() {
+collab_tool.getChalkColors = function(hoverable) {
+  hoverable = hoverable || false;
   var chalkContainer = document.createElement("ul");
   $(chalkContainer).attr("class","chalkColors");
   for (var i in collab_tool.colors) {
     var li = document.createElement("li");
+     if (hoverable) {
+      $(li).attr("class", "chalkColor " + collab_tool.colors[i].title + " hoverable");
+     } else {
     $(li).attr("class", "chalkColor "  + collab_tool.colors[i].title);
+    }
     $(li).data("hex", collab_tool.colors[i].hex);
     $(li).data("color",  collab_tool.colors[i].title); 
     $(li).attr("is-selected", "0");
     $(li).click(function() {
         $(".chalkColor").attr("is-selected", "0");
         $(".chalkColor").each(function() {
-            $(this).attr("class", "chalkColor " + $(this).data("color"));
+            $(this).attr("class", $(this).attr("class") + " "   + $(this).data("color"));
         });
           $(this).attr("is-selected", "1");
-          $(this).attr("class", " chalkColor " + $(this).data("color") + " selected");
+          $(this).attr("class", $(this).attr("class") + " " + $(this).data("color") + " selected");
       });
     $(chalkContainer).append(li); 
   }
@@ -216,23 +226,31 @@ collab_tool.welcomeMessage = function() {
     $(settings).attr("class", "settings-box dialog");
     $(settings).attr("id", "settings");
 
-    var heading = document.createElement("chatHeading");
+    var heading = document.createElement("h2");
     $(heading).text("Welcome to the collaboration tool. Please select a nickname and chalk color");
   
-    var label1 = document.createElement("label");
-    $(label1).html("Select a chalk color");
-
-    var chalkColors =  collab_tool.getChalkColors();
+    var h4 = document.createElement("h4");
+    $(h4).html("Select a chalk color");
+    var hr  =document.createElement("hr");
+    var chalkColors =  collab_tool.getChalkColors(true);
     $(settings).append(chalkColors); 
     var clear1 = document.createElement("div");
     $(clear1).attr("class", "clear");
+
+    var br1 = document.createElement("br");
+    var br2= document.createElement("br");
    var nickname = document.createElement("input");
+     $(nickname).attr("placeholder", "e.g Smith");
+
+
     $(nickname).attr("id", "nickname");
-    var label = document.createElement("label"); 
-    $(label).html("Select a nickname");
+    var h41 = document.createElement("h4");
+    $(h41).html("Select a nickname");
+    var hr1 = document.createElement("hr");
+    var clr3 = document.createElement("div");
+    $(clr3).attr("class", "clear");
     var  button = document.createElement("button");
-    
-    $(button).attr("class", "dc_g_button blue");
+    $(button).attr("class", "dc_g_button blue ok-button");
     $(button).html("Ok");
     $(button).click( function() {
         var nickName = $("#nickname").val();
@@ -260,14 +278,21 @@ collab_tool.welcomeMessage = function() {
     
       }); 
     $(settings).append(heading); 
-    $(settings).append(label1);
+    $(settings).append(h4);
+    $(settings).append(hr);
     $(settings).append(chalkColors);
     $(settings).append(clear1);
-    $(settings).append(label);
+    $(settings).append(br1);
+    $(settings).append(br2);
+    $(settings).append(h41);
+    $(settings).append(hr1);
     $(settings).append(nickname);
+    $(settings).append(clr3);
     $(settings).append(button);
     $(document.body).append(dimMask);
     $(document.body).append(settings);
+
+    $(settings).css({"left": (((window.innerWidth /2)  - ($(settings).outerWidth() / 2))) + "px"});
     // get the current drawings
     /* 
     Oneline.generic({ $j"type": "getDrawings",
@@ -276,11 +301,6 @@ collab_tool.welcomeMessage = function() {
       */
 };
 
-collab_tool.updateInternalConfig  = function(nickName, color) {
-  collab_tool.config.nickName =  nickName;
-  collab_tool.config.chalkColor = color;
-};
-    
 
 collab_tool.updateConfig = function(user)  {
     collab_tool.currentUser = user;
@@ -294,7 +314,7 @@ collab_tool.runCore = function() {
           "data": {
             "type": "sync",
               "data": {
-                  "lastUpdate": collab_tool.lastUpdate
+                  "lastUpdate": collab_tool.lastUpdate -5
                 }
             }});
       } else {
@@ -307,10 +327,18 @@ collab_tool.runCore = function() {
     }
 };
 collab_tool.addMessage= function(data) { // message from external user
-         
-    var newElement = $("<div><h5>" +data.collab_tool_users.nickName +"</h5>"  + "<p>" +   data.collab_tool_messages.message + "</p>"); 
-      $(newElement).attr("id", "message-" + data.collab_tool_messages.id);
-  $("#chatbox").append(newElement); 
+       
+    var theList =$("<li></li>");
+    var theUsername= $("<div class='username'>" +data.collab_tool_users.nickName+"</div>");
+    var theClear = $("<div class='clear'></div>");
+    var theMessage = $("<div class='message'>" +data.collab_tool_messages.message + "</div>");
+   $(theList).append( theUsername);
+    $(theList).append(theClear);
+    $(theList).append(theMessage);
+      $(theList).attr("id", "message-" + data.collab_tool_messages.id);
+  $("#chatMessages").append(theList);
+   var clr =$("<div class='clear'></div>");
+   $("#chatMessages").append(clr);
 };
 
 collab_tool.alertNewMember = function(data) {
@@ -335,6 +363,34 @@ collab_tool.drawFromData = function(data) { // other peoples pen should be a dif
   
   $(collab_tool.dock).append(target);
 };
+
+collab_tool.getWhiteboardBounds = function() {
+   var offset = $("#whiteboard").offset();
+   var scrollLeft = document.body.scrollLeft;
+   var scrollTop = document.body.scrollTop;
+   var leftMin = offset['left'] - scrollLeft, leftMax = (offset['left']+ $("#whiteboard").outerWidth()) - scrollLeft,
+     topMin = offset['top'] - scrollTop, topMax = (offset['top']+ $("#whiteboard").outerHeight()) - scrollTop;
+  return {
+      "leftMin": leftMin,
+      "leftMax": leftMax,
+      "topMin": topMin,
+      "topMax": topMax
+    };
+};
+collab_tool.coordsInBounds = function(coords) {
+   var coordinatesW = collab_tool.getWhiteboardBounds();
+   if (coords.x>= coordinatesW['leftMin'] &&
+      coords.x <= coordinatesW['leftMax'] &&
+      coords.y >= coordinatesW['topMin'] && 
+      coords.y <= coordinatesW['topMax']) {
+      return true;
+    }
+    return false;
+};
+
+
+
+
 collab_tool.startDraw = function() {
     var whiteboard = $("#whiteboard").get()[0];
     
@@ -347,6 +403,8 @@ collab_tool.drawDrag = function(evt) {
     var offset =$("#dock").offset();
     var top = evt.clientY - offset['top'];
     var left = evt.clientX - offset['left'];
+
+    if ( collab_tool.coordsInBounds({"x": left, y: top } ) ) { 
    $(target).css({"left": evt.clientX - offset['left'], "top": evt.clientY - offset['top']});
   $(target).attr("class", "chalk " + collab_tool.settings.chalkColor ); 
  
@@ -365,6 +423,7 @@ collab_tool.drawDrag = function(evt) {
         }
     });
     $("#whiteboard").get()[0].addEventListener("mousemove", collab_tool.drawDrag, false);  
+  }
 };
 
 collab_tool.drawEnd = function(evt) {
@@ -384,21 +443,29 @@ collab_tool.initUI = function() {
     $(dock).attr("id", "dock");
     $(dock).attr("class","dock");
     $(document.body).append(dock);
+    var chatAlert  =document.createElement("div");
+    
     // plithat
+    var outerChatWindow = document.createElement("div");
     var chatWindow = document.createElement("div");
     var chatMembers = document.createElement("div");
-    var chatBox = document.createElement("textarea");
+     
+ 
+    var chatBox = document.createElement("div");
+    var chatBoxTextarea = document.createElement("textarea");
     var chatMessages = document.createElement("div");
 
-     $(chatBox).keyup(function(e) {
+     $(chatBoxTextarea).keyup(function(e) {
         if (e.keyCode === 13) { 
         collab_tool.say($(this).val()); 
         $(this).val("");
         }
     });
+    $(chatAlert).attr("id", "chatAlert");
     var chatHeading = document.createElement("h2");
     $(chatHeading).text("Chat Window");
     // dock for whiteboard
+    var outerWhiteboard = document.createElement("div");
     var whiteboard = document.createElement("div");
     $(whiteboard).attr("id", "whiteboard");
     $(whiteboard).attr("class", "whiteboard");
@@ -406,50 +473,69 @@ collab_tool.initUI = function() {
     $(chatWindow).attr("class", "chat-window");
     $(chatMembers).attr("id", "members");
     $(chatMembers).attr("class", "members");
-    $(chatMessages).attr("id", "chatbox");
+    $(chatMessages).attr("id", "chatMessages");
      
-     
-    $(whiteboard).width(($(document.body).width() -  parseInt(($(document.body).width() / 4))) - (2 + 2));
-    $(whiteboard).height(window.innerHeight * .75);
-    $(chatWindow).width((parseInt($(document.body).width() / 4)) - ((10 * 2) +  (2 + 2)));
-    $(chatWindow).height(window.innerHeight * .75);
+    
+    var scrollWidth  = collab_tool.getScrollWidth(); 
+    $(outerChatWindow).css({"width": "30%"});
+    $(outerWhiteboard).css({"width": "70%"});
+    $(whiteboard).height(window.innerHeight);
+    $(chatWindow).height(window.innerHeight);
 
     $(chatBox).attr("id","chatBox");
     $(chatBox).attr("class", "chat-box");
+    var chatMessagesHeading = document.createElement("h2");
+    $(chatMessagesHeading).text("Messages");
+    var chatMessagesClr = document.createElement("div");
+    $(chatMessagesClr).attr("class", "clear");
+    var chatMessagesHr = document.createElement("hr");
+    $(chatMessagesHr).attr("class", "hr");
+    var chatMessagesClr2 = document.createElement("div");
+    $(chatMessagesClr2).attr("class", "clear");
     $(chatMessages).attr("class", "chat-messages");
+    $(chatMessages).append(chatMessagesHeading);
+    $(chatMessages).append(chatMessagesClr);
+    $(chatMessages).append(chatMessagesHr);
+    $(chatMessages).append(chatMessagesClr2);
     $(chatWindow).append(chatHeading);
     $(chatWindow).append(chatMembers);
+    var chatWindowClr1 = document.createElement("div");
+    $(chatWindowClr1).attr("class", "clear");
+    $(chatWindow).append(chatWindowClr1);
     $(chatWindow).append(chatMessages);
+    var chatWindowClr2 = document.createElement("div");
+    $(chatWindowClr2).attr("class","clear");
+    $(chatWindow).append(chatWindowClr2);
     $(chatWindow).append(chatBox);
     
-    $(chatBox).height(window.innerHeight / 3);
-    $(chatMessages).height($(chatWindow).height() - $(chatBox).height() - 120);
     var reltrace = document.createElement("div");
     $(reltrace).css({"width": "inherit", "height": "inherit", "position": "relative"});
     $(reltrace).attr("class", "reltrace");
     var button = document.createElement("button");
 
-    $(button).attr("class", "dc_g_button blue");
+    $(button).attr("class", "dc_g_button blue say-button");
     $(button).css({"position": "absolute","bottom": "5px"});
+    
     $(button).html("Say");
     $(button).click(function(e) {
         collab_tool.say($("#chatBox").val());
     });
-    $(chatWindow).append(button);
-    $(dock).append(whiteboard);
-    $(dock).append(chatWindow);
+    //make alert in the middle
+    $(chatAlert).css({"left": ((window.innerWidth  / 2)  - ($(chatAlert).outerWidth()  /2))  + "px" });
+    $(chatBox).append(chatBoxTextarea);
+    $(chatBox).append(button);
+      
+    $(outerChatWindow).append(chatWindow);
+    $(outerWhiteboard).append(whiteboard);
+    $(dock).append(chatAlert);
+    $(dock).append(outerWhiteboard);
+    $(dock).append(outerChatWindow);
 
     collab_tool.startDraw();
 };
 
+
 collab_tool.say = function(message) {
-   var li = document.createElement("li");
-   var user = collab_tool.getUser();
-   $(li).append("<div class='username'>" + user.nickName + "</div>" + "<div class='message'>" + message + "</div>");
-   $("#chatbox").append(li);   
-
-    console.log("sending a message");
-
    Oneline.once({ "obj": "generic",
         "data": {
         "once": true, 
@@ -489,11 +575,20 @@ window.onload = function() {
 };
 */
 
-collab_tool.warn = function(msg) { alert(msg); 
+collab_tool.warn = function(msg) {
+   $("#chatAlert").text(msg);
+   $("#chatAlert").show(); 
+   setTimeout(function() {
+      $("#chatAlert").hide();
+   }, 1000);
 
 };
-
-$(window).resize(function() {
-    $("#whiteboard").width(($(document.body).width() - parseInt(($(document.body).width() / 4))) - (2 + 2));
-    $("#settings").width(parseInt($(document.body).width() / 4) - ((10 + 10) + (2 + 2)));
-});
+collab_tool.getScrollWidth = function() {
+   var currentWidth = window.innerWidth;
+   var dummyElement =  document.createElement("div");
+   document.body.appendChild(dummyElement);
+   dummyElement.style.height = window.innerHeight + 1;
+   var scrollWidth  = window.innerWidth  -currentWidth; 
+   dummyElement.remove();
+   return scrollWidth;
+};
